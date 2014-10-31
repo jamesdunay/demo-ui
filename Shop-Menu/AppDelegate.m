@@ -7,6 +7,9 @@
 //
 
 #import "AppDelegate.h"
+#import "MenuViewController.h"
+#import "FeedOptionOneViewController.h"
+#import "FeedOptionTwoViewController.h"
 
 @implementation AppDelegate
 
@@ -16,6 +19,11 @@
     // Override point for customization after application launch.
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
+    
+    FeedOptionTwoViewController* vc = [[FeedOptionTwoViewController alloc] init];
+    [self.window setRootViewController:vc];
+    
+
     return YES;
 }
 
