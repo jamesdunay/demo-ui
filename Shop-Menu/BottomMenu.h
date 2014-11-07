@@ -14,8 +14,18 @@
 -(void)manualOffsetScrollview:(CGFloat)offset;
 -(void)darkenScreen;
 -(void)lightenScreen;
+-(void)displayAllScreensWithStartingDisplayOn:(CGFloat)startingPosition;
 @end
 
 @interface BottomMenu : UIView <UIGestureRecognizerDelegate>
 @property(nonatomic) id <BottomMenuDelegate> mBottomMenuDelegate;
+
+@property(nonatomic) CGFloat displayOverviewYCoord;
+@property(nonatomic) CGFloat screenHeight;
+@property(nonatomic) CGSize defaultFrameSize;
+
+-(void)scrollOverviewButtonsWithPercentage:(CGFloat)offsetPercentage;
+-(void)returnMenuToSelected:(NSInteger)index;
+-(void)defaultToShopPressed;
+
 @end

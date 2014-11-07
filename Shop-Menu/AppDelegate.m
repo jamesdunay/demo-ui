@@ -10,8 +10,14 @@
 #import "MenuViewController.h"
 #import "FeedOptionOneViewController.h"
 #import "FeedOptionTwoViewController.h"
+#import "SelectionViewController.h"
+
+@interface AppDelegate()
+@property(nonatomic, strong)UINavigationController* navController;
+@end
 
 @implementation AppDelegate
+
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
@@ -19,12 +25,23 @@
     // Override point for customization after application launch.
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
-    
-    FeedOptionTwoViewController* vc = [[FeedOptionTwoViewController alloc] init];
-    [self.window setRootViewController:vc];
-    
 
+    SelectionViewController* vc = [[SelectionViewController alloc] init];
+    
+    self.navController = [[UINavigationController alloc] initWithRootViewController:vc];
+    [self.navController setNavigationBarHidden:YES];
+
+    [self.window setRootViewController:self.navController];
+    
+    UITapGestureRecognizer* tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapped)];
+    tapGesture.numberOfTapsRequired = 3;
+    [self.window addGestureRecognizer:tapGesture];
+    
     return YES;
+}
+
+-(void)tapped{
+    [self.navController popToRootViewControllerAnimated:YES];
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application

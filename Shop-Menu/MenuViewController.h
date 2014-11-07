@@ -9,6 +9,6 @@
 #import <UIKit/UIKit.h>
 #import "BottomMenu.h"
 
-@interface MenuViewController : UIViewController <BottomMenuDelegate>
+@interface MenuViewController : UIViewController <BottomMenuDelegate, UIScrollViewDelegate>
 
 @end

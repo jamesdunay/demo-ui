@@ -21,7 +21,8 @@ typedef enum : NSUInteger {
 @implementation MenuButton
 @end
 
-static CGFloat displayYCoord = 30;
+static CGFloat displayYCoord = 15;
+static CGFloat cornerRadius = 7.0f;
 
 @interface BottomMenu()
 
@@ -34,12 +35,19 @@ static CGFloat displayYCoord = 30;
 @property (nonatomic, strong)NSMutableArray* buttons;
 @property (nonatomic, strong)NSMutableArray* buttonConstaints;
 @property (nonatomic, strong)NSArray* colors;
+
 @property(nonatomic, strong) NSLayoutConstraint *constraintOne;
 @property(nonatomic, strong) NSLayoutConstraint *constraintTwo;
 @property(nonatomic, strong) NSLayoutConstraint *constraintThree;
 @property(nonatomic, strong) NSLayoutConstraint *constraintFour;
 @property(nonatomic, strong) NSLayoutConstraint *constraintFive;
 @property(nonatomic, strong) NSLayoutConstraint *bottomPosition;
+
+@property(nonatomic, strong) UIPanGestureRecognizer* panGesture;
+
+@property(nonatomic) BOOL isDisplayingAll;
+
+
 
 
 @end
@@ -68,6 +76,13 @@ typedef enum : NSUInteger {
 }
 
 -(void)setupConstraints{
+    
+    
+    
+    NSMutableData* something = [[NSMutableData alloc] initWithLength:10];
+    
+    
+    
     
     NSMutableArray* constraints = [[NSMutableArray alloc] init];
     
@@ -119,15 +134,21 @@ typedef enum : NSUInteger {
         [button setTranslatesAutoresizingMaskIntoConstraints:NO];
         button.tag = idx;
         button.buttonState = ButtonStateDisplayed;
-        [button setTitle:[NSString stringWithFormat:@"%d", idx] forState:UIControlStateNormal];
+        [button setTitle:[NSString stringWithFormat:@"%ld", idx] forState:UIControlStateSelected];
+        [[button imageView] setContentMode:UIViewContentModeScaleAspectFit];
+        [button setImage:nil forState:UIControlStateNormal];
+        [button setSelected:YES];
         
         [button setTitleColor:[UIColor darkGrayColor] forState:UIControlStateNormal];
         UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(touchedMenuItem:)];
-        UIPanGestureRecognizer* pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panSelectedButton:)];
-        pan.delegate = self;
+        self.panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panSelectedButton:)];
+        self.panGesture.delegate = self;
+
+        UILongPressGestureRecognizer* longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(touchAndHold:)];
         
         [button addGestureRecognizer:tap];
-        [button addGestureRecognizer:pan];
+        [button addGestureRecognizer:self.panGesture];
+        [button addGestureRecognizer:longPress];
         
         button.backgroundColor = [UIColor whiteColor];
         [self.buttons addObject:button];
@@ -135,6 +156,12 @@ typedef enum : NSUInteger {
     }];
 }
 
+-(void)defaultToShopPressed{
+    [self.buttons[0] setButtonState:ButtonStateSelected];
+    [self createSelectedStyleForButton:self.buttons[0]];
+    [self collapseAllButtons];
+    [self.mBottomMenuDelegate fadeToIndex:[self.buttons[0] tag]];
+}
 
 - (void)touchedMenuItem:(id)sender {
 
@@ -142,10 +169,8 @@ typedef enum : NSUInteger {
         case ButtonStateDisplayed:
             [(MenuButton*)[sender view] setButtonState:ButtonStateSelected];
             
-            [(MenuButton*)[sender view] setBackgroundColor:[UIColor clearColor]];
-            [self addBorderToView:((MenuButton*)[sender view])];
+            [self createSelectedStyleForButton:(MenuButton*)[sender view]];
             
-            [self bringSubviewToFront:(MenuButton*)[sender view]];
             [self collapseAllButtons];
             [self.mBottomMenuDelegate fadeToIndex:[(MenuButton*)[sender view]tag]];
             break;
@@ -159,8 +184,17 @@ typedef enum : NSUInteger {
     }
 }
 
+-(void)createSelectedStyleForButton:(MenuButton*)button{
+//    [button setBackgroundColor:[UIColor clearColor]];
+//    [self addBorderToView:button];
+    
+    [self addShadowTo:button];
+    [self bringSubviewToFront:button];
+}
 
 - (void)collapseAllButtons{
+    
+    self.panGesture.enabled = YES;
     
     [self.mBottomMenuDelegate lightenScreen];
     
@@ -172,24 +206,31 @@ typedef enum : NSUInteger {
         CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"cornerRadius"];
         animation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseIn];
         animation.fromValue = [NSNumber numberWithFloat:0.0f];
-        animation.toValue = [NSNumber numberWithFloat:32.0f];
+        animation.toValue = [NSNumber numberWithFloat:cornerRadius];
         animation.duration = .17;
         [button.layer addAnimation:animation forKey:@"cornerRadius"];
-        [button.layer setCornerRadius:32.0];
+        [button.layer setCornerRadius:cornerRadius];
+        
+        [button setImage:[UIImage imageNamed:@"menu_icon"] forState:UIControlStateNormal];
+        [button setSelected:NO];
+        
     }];
     
+    
+    CGFloat buttonWidth = self.defaultFrameSize.width/5;
+    
     void (^animations)(void) = ^{
-        self.constraintOne.constant = self.frame.size.width/5 * 1;
-        self.constraintTwo.constant = self.frame.size.width/5 * 1.5;
-        self.constraintThree.constant = self.frame.size.width/5 * 2;
-        self.constraintFour.constant = self.frame.size.width/5 * 2.5;
-        self.constraintFive.constant = self.frame.size.width/5 * 3;
+        self.constraintOne.constant = buttonWidth * 1;
+        self.constraintTwo.constant = buttonWidth * 1.5;
+        self.constraintThree.constant = buttonWidth * 2;
+        self.constraintFour.constant = buttonWidth * 2.5;
+        self.constraintFive.constant = buttonWidth * 3;
         
-        self.frame = CGRectMake(0, self.frame.origin.y - displayYCoord, self.frame.size.width, 65);
+        self.frame = CGRectMake(0, (self.screenHeight-60) - displayYCoord, self.defaultFrameSize.width, 60);
         
         [self.buttonConstaints enumerateObjectsUsingBlock:^(NSLayoutConstraint *constraint, NSUInteger idx, BOOL *stop) {
             if ([(MenuButton*)constraint.firstItem isEqual:self.buttons[[self indexOfActiveButton]]]) {
-                constraint.constant = self.frame.size.width/5 * 2;
+                constraint.constant = buttonWidth * 2;
             }
         }];
         
@@ -198,7 +239,7 @@ typedef enum : NSUInteger {
     
     [UIView animateWithDuration:.65f
                           delay:0.f
-         usingSpringWithDamping:.7
+         usingSpringWithDamping:.85
           initialSpringVelocity:12
                         options:UIViewAnimationOptionCurveLinear | UIViewAnimationOptionAllowUserInteraction
                      animations:animations
@@ -216,6 +257,8 @@ typedef enum : NSUInteger {
 
 - (void)displayAllButtons{
     
+    self.panGesture.enabled = NO;
+    
     [self.mBottomMenuDelegate darkenScreen];
     
     void (^animations)(void) = ^{};
@@ -227,14 +270,14 @@ typedef enum : NSUInteger {
         self.constraintFour.constant = self.frame.size.width/5 * 3;
         self.constraintFive.constant = self.frame.size.width/5 * 4;
         
-        self.frame = CGRectMake(0, self.frame.origin.y + displayYCoord, self.frame.size.width, 70);
+        self.frame = CGRectMake(0, (self.screenHeight-self.defaultFrameSize.height), self.defaultFrameSize.width, self.defaultFrameSize.height);
         [self layoutIfNeeded];
     };
     
     [UIView animateWithDuration:.25f
                           delay:0.f
          usingSpringWithDamping:.98
-          initialSpringVelocity:11
+          initialSpringVelocity:14
                         options:UIViewAnimationOptionCurveLinear | UIViewAnimationOptionAllowUserInteraction
                      animations:animations
                      completion:^(BOOL finished) {}];
@@ -279,33 +322,38 @@ typedef enum : NSUInteger {
 
 -(void)switchToPageNext:(BOOL)next{
     
-    NSInteger targetedButton = next ? next : -1;
+    int targetedButton = next ? next : -1;
     NSInteger activeIndex = [self indexOfActiveButton];
-    
-    MenuButton* activeButton = self.buttons[activeIndex];
-    MenuButton* nextButton = self.buttons[activeIndex+targetedButton];
 
-    [self removeBorderToView:activeButton];
-    [self addBorderToView:nextButton];
-    
-    [activeButton setButtonState:ButtonStateDisplayed];
-    [nextButton setButtonState:ButtonStateSelected];
-    
-    [self bringSubviewToFront:nextButton];
-    void (^animations)(void) = ^{
+    if (activeIndex + targetedButton > 0 ||activeIndex + targetedButton < self.buttons.count) {
         
-        [self.buttonConstaints enumerateObjectsUsingBlock:^(NSLayoutConstraint *constraint, NSUInteger idx, BOOL *stop) {
-            if ([(MenuButton*)constraint.firstItem isEqual:self.buttons[[self indexOfActiveButton]]]) {
-                constraint.constant = self.frame.size.width/5 * 2;
-            }
-        }];
-        activeButton.alpha = 0;
-        nextButton.alpha = 1;
-    };
-    
-    [UIView animateWithDuration:.2 animations:animations completion:nil];
-    
-    [self.mBottomMenuDelegate didSwitchToIndex:nextButton.tag];
+        MenuButton* activeButton = self.buttons[activeIndex];
+        MenuButton* nextButton = self.buttons[activeIndex+targetedButton];
+
+    //    [self removeBorderToView:activeButton];
+    //    [self addBorderToView:nextButton];
+        [self removeShadowFrom:activeButton];
+        [self addShadowTo:nextButton];
+
+        [activeButton setButtonState:ButtonStateDisplayed];
+        [nextButton setButtonState:ButtonStateSelected];
+        
+        [self bringSubviewToFront:nextButton];
+        void (^animations)(void) = ^{
+            
+            [self.buttonConstaints enumerateObjectsUsingBlock:^(NSLayoutConstraint *constraint, NSUInteger idx, BOOL *stop) {
+                if ([(MenuButton*)constraint.firstItem isEqual:self.buttons[[self indexOfActiveButton]]]) {
+                    constraint.constant = self.frame.size.width/5 * 2;
+                }
+            }];
+            activeButton.alpha = 0;
+            nextButton.alpha = 1;
+        };
+        
+        [UIView animateWithDuration:.2 animations:animations completion:nil];
+        
+        [self.mBottomMenuDelegate didSwitchToIndex:nextButton.tag];
+    }
 }
 
 -(void)showAllButtons{
@@ -313,8 +361,12 @@ typedef enum : NSUInteger {
         button.buttonState = ButtonStateDisplayed;
         [button.layer setCornerRadius:0.f];
         button.backgroundColor = [UIColor whiteColor];
-        [self removeBorderToView:button];
+//        [self removeBorderToView:button];
+        [self removeShadowFrom:button];
         button.alpha = 1.f;
+        
+        [button setImage:nil forState:UIControlStateNormal];
+        [button setSelected:YES];
     }];
 }
 
@@ -346,6 +398,24 @@ typedef enum : NSUInteger {
     view.layer.borderWidth = 0.f;
 }
 
+
+-(void)addShadowTo:(UIView*)view{
+    view.alpha = 1;
+    view.backgroundColor = [UIColor whiteColor];
+    view.layer.shadowColor = [[UIColor blackColor] CGColor];
+    view.layer.shadowOffset = CGSizeMake(0.f, 2.0f);
+    view.layer.shadowRadius = 3.0f;
+    view.layer.shadowOpacity = .4f;
+}
+
+-(void)removeShadowFrom:(UIView*)view{
+    view.backgroundColor = [UIColor whiteColor];
+    view.layer.shadowColor = [[UIColor blackColor] CGColor];
+    view.layer.shadowOffset = CGSizeMake(0.f, 1.0f);
+    view.layer.shadowRadius = 0.f;
+    view.layer.shadowOpacity = 0.f;
+}
+
 -(NSUInteger)indexOfActiveButton{
 //Needs Polish
     __block NSUInteger index = 0;
@@ -362,6 +432,93 @@ typedef enum : NSUInteger {
     return self.frame.size.width/12;
 }
 
+-(void)selectedButtonAtIndex:(NSInteger)index{
+    [self.buttons[index] setButtonState:ButtonStateSelected];
+    [self createSelectedStyleForButton:self.buttons[index]];
+}
+
+#pragma Mark Touch And Hold
+
+- (void) touchAndHold:(UIGestureRecognizer*)longPressGesture{
+    if (!self.isDisplayingAll) {
+        [self.mBottomMenuDelegate displayAllScreensWithStartingDisplayOn:[self indexOfActiveButton]];
+        [self showAllButtonsInOverViewMode];
+                             self.isDisplayingAll = YES;
+    }
+}
+
+
+-(void)showAllButtonsInOverViewMode{
+     [self positionAllButtonsForOverView];
+}
+
+
+- (void)positionAllButtonsForOverView{
+    
+    self.panGesture.enabled = NO;
+    
+    CGFloat spacingMultiplyer = ([self indexOfActiveButton] * 10);
+    CGFloat defaultPosition = (self.frame.size.width - (self.frame.size.width/5))/2;
+    CGFloat buttonOffset = [self indexOfActiveButton] * (self.frame.size.width/5);
+    
+    CGFloat xPosToScrollButtonsTo = defaultPosition - spacingMultiplyer - buttonOffset;
+    
+    CGFloat squareButtonDimension = self.frame.size.width/5.f;
+    CGFloat heightUnderScreens = self.screenHeight - self.displayOverviewYCoord;
+    
+    
+    
+    void (^animations)(void) = ^{};
+    animations = ^{
+        [self showAllButtonsInOverviewMode];
+        self.constraintOne.constant = self.frame.size.width/5 * 0;
+        self.constraintTwo.constant = self.frame.size.width/5 * 1 + 10;
+        self.constraintThree.constant = self.frame.size.width/5 * 2 + 20;
+        self.constraintFour.constant = self.frame.size.width/5 * 3 + 30;
+        self.constraintFive.constant = self.frame.size.width/5 * 4 + 40;
+        
+        self.frame = CGRectMake(xPosToScrollButtonsTo, self.displayOverviewYCoord + ((heightUnderScreens - squareButtonDimension)/2), self.frame.size.width, squareButtonDimension);
+        [self layoutIfNeeded];
+    };
+    
+    [UIView animateWithDuration:.25f
+                          delay:0.f
+         usingSpringWithDamping:.98
+          initialSpringVelocity:11
+                        options:UIViewAnimationOptionCurveLinear | UIViewAnimationOptionAllowUserInteraction
+                     animations:animations
+                     completion:^(BOOL finished) {
+
+                     }];
+}
+
+-(void)returnMenuToSelected:(NSInteger)index{
+    [self selectedButtonAtIndex:index];
+    [self collapseAllButtons];
+    self.isDisplayingAll = NO;
+//    self.frame = CGRectMake(0, self.frame.origin.y, self.frame.size.width, self.frame.size.height);
+}
+
+-(void)showAllButtonsInOverviewMode{
+    [self.buttons enumerateObjectsUsingBlock:^(MenuButton* button, NSUInteger idx, BOOL *stop) {
+        button.buttonState = ButtonStateDisplayed;
+        button.backgroundColor = [UIColor whiteColor];
+        button.alpha = 1.f;
+        
+        [button setImage:nil forState:UIControlStateNormal];
+        [button setSelected:YES];
+    }];
+}
+
+-(void)scrollOverviewButtonsWithPercentage:(CGFloat)offsetPercentage{
+    if (self.isDisplayingAll) {
+        CGFloat squareButtonDimension = self.frame.size.width/5.f;
+        CGFloat defaultPosition = (self.frame.size.width - squareButtonDimension)/2;
+        CGFloat offsetAmount = offsetPercentage * (squareButtonDimension + 10);
+        
+        self.frame = CGRectMake(defaultPosition - offsetAmount, self.frame.origin.y, self.frame.size.width, self.frame.size.height);
+    }
+}
 
 @end
 
