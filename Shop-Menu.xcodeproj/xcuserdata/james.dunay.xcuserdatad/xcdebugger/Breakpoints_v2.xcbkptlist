@@ -26,11 +26,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Shop-Menu/MenuViewController.m"
-            timestampString = "437073550.897956"
+            timestampString = "437077923.576345"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "197"
-            endingLineNumber = "197"
+            startingLineNumber = "194"
+            endingLineNumber = "194"
             landmarkName = "-displayAllScreensWithStartingDisplayOn:"
             landmarkType = "5">
          </BreakpointContent>

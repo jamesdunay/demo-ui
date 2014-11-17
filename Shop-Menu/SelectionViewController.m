@@ -77,7 +77,7 @@
     NSDictionary* introDict = @{@"text" : @"Welcome to The RealReal testing environment.\n\nThis app will help us develop and explore mobile interations and behaviors.",
                                 @"gesture" : @(0)};
 
-    NSDictionary* doubleTapDict = @{@"text" : @"Tripple Tap\n\n The screen at any point to return to this page.",
+    NSDictionary* doubleTapDict = @{@"text" : @"Triple Tap\n\n The screen at any point to return to this page.",
                                     @"gesture" : @(GestureDoubleTap)};
     
     instructionView.instructions = [instructionView createInstructionsFromArray:@[introDict, secondDict, doubleTapDict]];

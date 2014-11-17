@@ -1490,7 +1490,7 @@
 				INFOPLIST_FILE = "Shop-Menu/Shop-Menu-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE = "0f33e90b-bb22-4ea7-a5c7-d57bf699c5de";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -1507,7 +1507,7 @@
 				INFOPLIST_FILE = "Shop-Menu/Shop-Menu-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE = "0f33e90b-bb22-4ea7-a5c7-d57bf699c5de";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

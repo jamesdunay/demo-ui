@@ -6,6 +6,8 @@
 //  Copyright (c) 2014 James.Dunay. All rights reserved.
 //
 
+//Can use animatedImageWithImages to animate an array of images
+
 #import "UIImage+GestureImages.h"
 
 @implementation UIImage (GestureImages)
